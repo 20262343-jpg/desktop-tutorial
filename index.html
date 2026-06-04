@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>통합 학습 스케줄러 (기말고사 & 자격증)</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; display: flex; gap: 20px; }
+        h1, h2, h3 { color: #333; margin-top: 0; }
+        .sidebar { width: 320px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); height: 90vh; overflow-y: auto;}
+        .main { flex-grow: 1; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); height: 90vh; display: flex; flex-direction: column;}
+        
+        /* 입력 폼 스타일 */
+        input[type="text"], input[type="date"], select { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px;}
+        button:hover { background-color: #45a049; }
+
+        /* 과목 목록 (드래그 아이템) */
+        .subject-item { padding: 10px; margin-bottom: 10px; border-radius: 5px; cursor: grab; border: 1px solid #ccc; display: flex; flex-direction: column; gap: 5px;}
+        .subject-item:active { cursor: grabbing; }
+        .item-header { display: flex; justify-content: space-between; align-items: center; }
+        .item-title { font-weight: bold; }
+        .d-day { background-color: #ff5252; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; }
+        .item-type { font-size: 0.8em; padding: 2px 5px; border-radius: 4px; display: inline-block; width: fit-content;}
+
+        /* 시험 종류별 색상 (사이드바) */
+        .type-final { background-color: #e3f2fd; border-color: #90caf9; }
+        .type-cert { background-color: #f3e5f5; border-color: #ce93d8; }
+        .type-other { background-color: #e8f5e9; border-color: #a5d6a7; }
+
+        /* 시험 종류별 뱃지 색상 */
+        .badge-final { background-color: #2196F3; color: white; }
+        .badge-cert { background-color: #9C27B0; color: white; }
+        .badge-other { background-color: #4CAF50; color: white; }
+
+        /* 달력(일정표) 스타일 */
+        .calendar-container { overflow-y: auto; flex-grow: 1; padding-right: 10px;}
+        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+        .day-cell { border: 2px dashed #ccc; border-radius: 8px; padding: 10px; min-height: 120px; background-color: #fafafa; display: flex; flex-direction: column; gap: 5px;}
+        .day-cell.drag-over { background-color: #fff3e0; border-color: #ff9800; }
+        .day-header { font-weight: bold; text-align: center; margin-bottom: 5px; color: #555; border-bottom: 1px solid #ddd; padding-bottom: 5px;}
+        
+        /* 토요일, 일요일 색상 */
+        .day-sat .day-header { color: #1976D2; }
+        .day-sun .day-header { color: #D32F2F; }
+
+        /* 일정표 안의 과목 태그 */
+        .schedule-tag { padding: 6px; border-radius: 4px; font-size: 0.9em; text-align: center; cursor: pointer; color: #333; box-shadow: 0 1px 3px rgba(0,0,0,0.1);}
+        .tag-final { background-color: #bbdefb; border: 1px solid #90caf9; }
+        .tag-cert { background-color: #e1bee7; border: 1px solid #ce93d8; }
+        .tag-other { background-color: #c8e6c9; border: 1px solid #a5d6a7; }
+        .schedule-tag:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+    <!-- 왼쪽: 일정 입력 및 목록 -->
+    <div class="sidebar">
+        <h2>➕ 새로운 일정 추가</h2>
+        <select id="examType">
+            <option value="final">학교 기말고사</option>
+            <option value="cert">자격증 시험</option>
+            <option value="other">기타 (어학, 모의고사 등)</option>
+        </select>
+        <input type="text" id="subjectName" placeholder="시험명/과목명 (예: 정보처리기사, 수학)">
+        <input type="date" id="examDate">
+        <button onclick="addSubject()">목록에 추가하기</button>
+
+        <h3>📋 나의 목표 목록</h3>
+        <p style="font-size: 0.8em; color: #666; margin-top: -10px;">(드래그해서 우측 달력에 놓으세요)</p>
+        <div id="subjectList">
+            <!-- 추가된 과목이 여기에 표시됩니다 -->
+        </div>
+    </div>
+
+    <!-- 오른쪽: 달력 일정표 -->
+    <div class="main">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px;">
+            <div>
+<h2 style="margin: 0;">📅 월별 학습 스케줄</h2>
+<select id="monthSelector" style="width:140px;margin-top:8px;">
+</select>
+</div>
+            <span style="font-size: 0.9em; color: #777;">* 일정 블록을 클릭하면 삭제할 수 있습니다.</span>
+        </div>
+        
+        <div class="calendar-container">
+            <div class="calendar" id="calendar">
+                <!-- 달력이 자바스크립트로 생성됩니다 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let subjectIdCounter = 0;
+
+        // D-Day 계산 함수
+        function calculateDday(examDateStr) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); 
+            const examDate = new Date(examDateStr);
+            examDate.setHours(0, 0, 0, 0);
+            
+            const diffTime = examDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) return "D-Day";
+            if (diffDays > 0) return `D-${diffDays}`;
+            return `D+${Math.abs(diffDays)}`;
+        }
+
+        // 시험 종류에 따른 라벨 텍스트 반환
+        function getTypeName(typeValue) {
+            if(typeValue === 'final') return '기말고사';
+            if(typeValue === 'cert') return '자격증';
+            return '기타';
+        }
+
+        // 과목 추가 함수
+        function addSubject() {
+            const typeInput = document.getElementById('examType').value;
+            const nameInput = document.getElementById('subjectName').value;
+            const dateInput = document.getElementById('examDate').value;
+
+            if (!nameInput || !dateInput) {
+                alert("시험명과 날짜를 모두 입력해주세요!");
+                return;
+            }
+
+            const subjectList = document.getElementById('subjectList');
+            const dDayStr = calculateDday(dateInput);
+            const typeName = getTypeName(typeInput);
+            
+            // 드래그 가능한 요소 생성
+            const subjectDiv = document.createElement('div');
+            subjectDiv.className = `subject-item type-${typeInput}`;
+            subjectDiv.draggable = true;
+            subjectDiv.id = 'subject-' + subjectIdCounter++;
+            
+            // 드래그 할 때 전달할 데이터 (JSON 형식으로 이름과 타입을 함께 전달)
+            const dragData = JSON.stringify({ name: nameInput, type: typeInput });
+            subjectDiv.dataset.info = dragData; 
+            
+            subjectDiv.innerHTML = `
+                <div class="item-header">
+                    <span class="item-title">${nameInput}</span>
+                    <span class="d-day">${dDayStr}</span>
+                </div>
+                <span class="item-type badge-${typeInput}">${typeName}</span>
+                <span style="font-size: 0.8em; color: #555; margin-top: 3px;">목표일: ${dateInput}</span>
+<button class="goal-delete" style="background:#d32f2f;margin-top:8px;margin-bottom:0;">삭제</button>
+            `;
+
+            // 드래그 시작 이벤트
+            subjectDiv.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('application/json', e.target.dataset.info);
+            });
+
+            subjectDiv.querySelector('.goal-delete').addEventListener('click', (e)=>{
+                e.stopPropagation();
+                if(confirm('이 목표를 삭제하시겠습니까?')){
+                    subjectDiv.remove();
+                }
+            });
+
+            subjectList.appendChild(subjectDiv);
+
+            // 입력창 초기화
+            document.getElementById('subjectName').value = '';
+            document.getElementById('examDate').value = '';
+        }
+
+        // 달력(일정표) 생성 함수 (선택 월)
+        function createCalendar(selectedMonth = new Date().getMonth()) {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+
+            const today = new Date();
+            const year = today.getFullYear();
+            const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
+
+            const lastDay = new Date(year, selectedMonth + 1, 0).getDate();
+
+            for (let dayNum = 1; dayNum <= lastDay; dayNum++) {
+                const currentDate = new Date(year, selectedMonth, dayNum);
+
+                const month = currentDate.getMonth() + 1;
+                const date = currentDate.getDate();
+                const dayIndex = currentDate.getDay();
+                const day = daysOfWeek[dayIndex];
+
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day-cell';
+
+                if (dayIndex === 0) dayCell.classList.add('day-sun');
+                if (dayIndex === 6) dayCell.classList.add('day-sat');
+
+                let headerText = `${month}/${date} (${day})`;
+
+                if (currentDate.toDateString() === today.toDateString()) {
+                    headerText = `오늘 - ${headerText}`;
+                }
+
+                dayCell.innerHTML = `<div class="day-header">${headerText}</div>`;
+
+                dayCell.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dayCell.classList.add('drag-over');
+                });
+
+                dayCell.addEventListener('dragleave', () => {
+                    dayCell.classList.remove('drag-over');
+                });
+
+                dayCell.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dayCell.classList.remove('drag-over');
+
+                    const dataString = e.dataTransfer.getData('application/json');
+                    if(!dataString) return;
+
+                    const data = JSON.parse(dataString);
+
+                    const tag = document.createElement('div');
+                    tag.className = `schedule-tag tag-${data.type}`;
+                    tag.innerText = data.name;
+
+                    tag.addEventListener('click', () => {
+                        if(confirm(`'${data.name}' 일정을 삭제하시겠습니까?`)) {
+                            tag.remove();
+                        }
+                    });
+
+                    dayCell.appendChild(tag);
+                });
+
+                calendar.appendChild(dayCell);
+            }
+        }
+
+        function initMonthSelector(){
+            const selector = document.getElementById('monthSelector');
+
+            for(let i=0;i<12;i++){
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `${i+1}월`;
+                selector.appendChild(option);
+            }
+
+            selector.value = new Date().getMonth();
+
+            selector.addEventListener('change', ()=>{
+                createCalendar(parseInt(selector.value));
+            });
+        }
+
+        // 앱 실행 시 달력 초기화
+        window.onload = () => {
+            initMonthSelector();
+            createCalendar(new Date().getMonth());
+        };
+    </script>
+</body>
+</html>
