@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>기록 추가</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">PetCare</div>
+        <nav>
+            <a href="index.html">홈</a>
+            <a href="register.html">등록</a>
+            <a href="pets.html">목록</a>
+            <a href="record.html">기록추가</a>
+            <a href="history.html">기록조회</a>
+        </nav>
+    </header>
+    <div class="container">
+        <h2>기록 추가</h2>
+        <select id="petSelect">
+            <option value="">반려동물 선택</option>
+        </select>
+        <select id="meal">
+            <option>O</option>
+            <option>X</option>
+        </select>
+        <input type="text" id="activity" placeholder="산책시간, 빗질시간 등">
+        <button onclick="addRecord()">
+            기록 저장
+        </button>
+    </div>
+    <footer>
+        <div class="footer-container">
+            <div class="footer-box">
+                <h3>PetCare</h3>
+                <p>
+                    반려동물 건강 관리 서비스
+                </p>
+            </div>
+            <div class="footer-box">
+                <h3>Menu</h3>
+                <a href="index.html">홈</a>
+                <a href="register.html">등록</a>
+                <a href="pets.html">목록</a>
+                <a href="record.html">기록추가</a>
+                <a href="history.html">기록조회</a>
+            </div>
+            <div class="footer-box">
+                <h3>Project</h3>
+                <p>HTML</p>
+                <p>CSS</p>
+                <p>JavaScript</p>
+            </div>
+        </div>
+        <div class="copyright">
+            © 2026 PetCare Project
+        </div>
+    </footer>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>반려동물 등록</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">PetCare</div>
+        <nav>
+            <a href="index.html">홈</a>
+            <a href="register.html">등록</a>
+            <a href="pets.html">목록</a>
+            <a href="record.html">기록추가</a>
+            <a href="history.html">기록조회</a>
+        </nav>
+    </header>
+    <div class="container">
+        <h2>반려동물 등록</h2>
+        <input type="text" id="name" placeholder="이름">
+        <input type="number" id="age" placeholder="나이">
+        <select id="type">
+            <option>강아지</option>
+            <option>고양이</option>
+            <option>관상어</option>
+            <option>애완조</option>
+            <option>파충양서류</option>
+        </select>
+        <button onclick="addPet()">
+            등록하기
+        </button>
+    </div>
+    <footer>
+        <div class="footer-container">
+            <div class="footer-box">
+                <h3>PetCare</h3>
+                <p>
+                    반려동물 건강 관리 서비스
+                </p>
+            </div>
+            <div class="footer-box">
+                <h3>Menu</h3>
+                <a href="index.html">홈</a>
+                <a href="register.html">등록</a>
+                <a href="pets.html">목록</a>
+                <a href="record.html">기록추가</a>
+                <a href="history.html">기록조회</a>
+            </div>
+            <div class="footer-box">
+                <h3>Project</h3>
+                <p>HTML</p>
+                <p>CSS</p>
+                <p>JavaScript</p>
+            </div>
+        </div>
+        <div class="copyright">
+            © 2026 PetCare Project
+        </div>
+    </footer>
+    <script src="app.js"></script>
+</body>
+</html>
